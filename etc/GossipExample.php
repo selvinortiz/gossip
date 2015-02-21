@@ -1,12 +1,27 @@
 <?php
-require __DIR__.'/../vendor/autoload.php';
+require dirname(__FILE__).'/../vendor/autoload.php';
 
-$gossip = new \SelvinOrtiz\Gossip\Gossip();
+$events = new \SelvinOrtiz\Gossip\Gossip();
 
-$gossip->on( 'cartChange', function( $event, $time ) {
-	echo '<pre style="color: #d00; font-weight: bold;">';
-	echo "The $event event was just executed @ $time";
-	echo '</pre>';
+$events->on('cart.onBeforeClear', function($items)
+{
+	$message = 'The cart is about to be cleared, here are the items in the cart.';
+
+	echo $message, PHP_EOL, '<pre>', print_r($items, true), '</pre>', PHP_EOL;
 });
 
-$gossip->notify( 'cartChange', time() );
+$events->notify(
+	'cart.onBeforeClear',
+	array(
+		array('id' => 1, 'title' => 'Shirt', 'color' => 'White', 'price' => 1099),
+		array('id' => 2, 'title' => 'Shorts', 'size' => 'XXL', 'price' => 1099),
+	)
+);
+
+
+$events->notify(
+	'cart.onBeforeClear',
+	array(
+		array('id' => 1, 'name' => 'Pants', 'price' => 2599),
+	)
+);

@@ -3,12 +3,32 @@ namespace SelvinOrtiz\Gossip;
 
 interface Gossip
 {
-	# Register an event handler
-	public function on( $event, \Closure $handler ) {}
+	/**
+	 * Registers an callback as an event handler
+	 *
+	 * @param string   $event
+	 * @param \Closure $handler
+	 *
+	 * @return mixed
+	 */
+	public function on($event, \Closure $handler) {}
 
-	# Register an event handler that will remove itself after the first call
+	/**
+	 * Registers an callback as an event handler that will remove itself after the first call
+	 *
+	 * @param string   $event
+	 * @param \Closure $handler
+	 *
+	 * @return mixed
+	 */
 	public function once( $event, \Closure $handler ) {}
 
-	# Notify that an event has been completed
-	public function notify( $event ) {}
+	/**
+	 * Notifies the application about an event
+	 *
+	 * @param string $event
+	 *
+	 * @return mixed
+	 */
+	public function notify($event) {}
 }

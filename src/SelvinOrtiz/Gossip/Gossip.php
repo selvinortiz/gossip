@@ -1,64 +1,59 @@
 <?php
 namespace SelvinOrtiz\Gossip;
 
+/**
+ * Class Gossip
+ *
+ * @author  Selvin Ortiz - http://selv.in
+ * @package SelvinOrtiz\Gossip
+ * @version 0.2.0
+ */
 class Gossip
 {
+	/**
+	 * @var \Closure[]
+	 */
 	protected $handlers = array();
 
-	public function on( $event, \Closure $handler )
+	/**
+	 * @inheritDoc IGossip::on()
+	 */
+	public function on($event, \Closure $handler)
 	{
-		if ( ! array_key_exists( (string) $event, $this->handlers ) ) {
-			$this->handlers[ (string) $event ] = array();
+		if (!array_key_exists($event, $this->handlers))
+		{
+			$this->handlers[$event] = array();
 		}
 
-		$this->handlers[ (string) $event ][] = $handler;
+		$this->handlers[$event][] = $handler;
 	}
 
-	public function once( $event, \Closure $handler ) {}
+	/**
+	 * @inheritDoc IGossip::once()
+	 */
+	public function once($event, \Closure $handler) {}
 
-	public function notify( $event )
+	/**
+	 * @inheritDoc IGossip::notify()
+	 */
+	public function notify($event, array $params = array())
 	{
-		$args = func_get_args();
-		$event= array_shift( $args );
+		$args  = func_get_args();
+		$event = array_shift( $args );
 
-		foreach ( $this->getEventHandlers( $event ) as $handler ) {
-			$this->execute( $event, $handler, $args );
+		foreach ($this->getEventHandlers($event) as $handler)
+		{
+			call_user_func_array($handler, $args);
 		}
 	}
 
-	public function getEventHandlers( $event )
+	/**
+	 * Returns all the registered handlers for a given event
+	 *
+	 * @param \Closure[]
+	 */
+	protected function getEventHandlers($event)
 	{
-		return array_key_exists( (string) $event, $this->handlers ) ? $this->handlers[ (string) $event ] : array();
+		return array_key_exists($event, $this->handlers) ? $this->handlers[$event] : array();
 	}
-
-	protected function execute( $event, $handler, $args=array() )
-	{
-		$count = count( $args );
-
-		if ( is_array( $args ) && $count ) {
-			switch( $count ) {
-				case 1:
-					return $handler->__invoke( $event, $args[ 0 ] );
-				break;
-				case 2:
-					return $handler->__invoke( $event, $args[ 0 ], $args[ 1 ] );
-				break;
-				case 3:
-					return $handler->__invoke( $event, $args[ 0 ], $args[ 1 ], $args[ 2 ] );
-				break;
-				case 4:
-					return $handler->__invoke( $event, $args[ 0 ], $args[ 1 ], $args[ 2 ], $args[ 3 ] );
-				break;
-				case 5:
-					return $handler->__invoke( $event, $args[ 0 ], $args[ 1 ], $args[ 2 ], $args[ 3 ], $args[ 4 ] );
-				break;
-				default:
-					return $handler->__invoke( $event, $args );
-				break;
-			}
-		}
-
-		return $handler->__invoke( $event );
-	}
-
 }
