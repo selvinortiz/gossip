@@ -1,1 +1,6 @@
+.tmp
+.temp
+.DS_Store
+.idea
+spec
 vendor

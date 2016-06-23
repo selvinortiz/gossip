@@ -1,59 +1,118 @@
 <?php
 namespace SelvinOrtiz\Gossip;
 
+
 /**
  * Class Gossip
  *
- * @author  Selvin Ortiz - http://selv.in
+ * @author  Selvin Ortiz - https://selvinortiz.com
  * @package SelvinOrtiz\Gossip
- * @version 0.2.0
+ * @version 1.0.0
  */
 class Gossip
 {
-	/**
-	 * @var \Closure[]
-	 */
-	protected $handlers = array();
+    /**
+     * @var static
+     */
+    protected static $instance;
 
-	/**
-	 * @inheritDoc IGossip::on()
-	 */
-	public function on($event, \Closure $handler)
-	{
-		if (!array_key_exists($event, $this->handlers))
-		{
-			$this->handlers[$event] = array();
-		}
+    /**
+     * @var callable[]
+     */
+    protected $responders = [];
 
-		$this->handlers[$event][] = $handler;
-	}
+    /**
+     * @var callable[]
+     */
+    protected $once = [];
 
-	/**
-	 * @inheritDoc IGossip::once()
-	 */
-	public function once($event, \Closure $handler) {}
+    protected function __construct() {}
+    protected function __cone() {}
 
-	/**
-	 * @inheritDoc IGossip::notify()
-	 */
-	public function notify($event, array $params = array())
-	{
-		$args  = func_get_args();
-		$event = array_shift( $args );
+    /**
+     * @return static
+     */
+    public static function instance()
+    {
+        if (static::$instance === null)
+        {
+            static::$instance = new static();
+        }
 
-		foreach ($this->getEventHandlers($event) as $handler)
-		{
-			call_user_func_array($handler, $args);
-		}
-	}
+        return static::$instance;
+    }
 
-	/**
-	 * Returns all the registered handlers for a given event
-	 *
-	 * @param \Closure[]
-	 */
-	protected function getEventHandlers($event)
-	{
-		return array_key_exists($event, $this->handlers) ? $this->handlers[$event] : array();
-	}
+    /**
+     * Registers a callable as an event responder
+     *
+     * @param string   $name
+     * @param callable $responder
+     */
+    public function listen($name, callable $responder)
+    {
+        if (!array_key_exists($name, $this->responders)) {
+            $this->responders[$name] = [];
+        }
+
+        $this->responders[$name][] = $responder;
+    }
+
+    /**
+     * Registers an callback as an event responder that will remove itself after the first call
+     *
+     * @param string   $name
+     * @param callable $responder
+     *
+     * @return $this
+     */
+    public function listenOnce($name, callable $responder)
+    {
+        if (!array_key_exists($name, $this->once)) {
+            $this->once[$name] = [];
+        }
+
+        $this->once[$name][] = $responder;
+    }
+
+    /**
+     * Quietly tells the responders about an event occurrence
+     *
+     * @param Event $event
+     */
+    public function whisper(Event $event)
+    {
+        $responders = $this->getEventResponders($event->name);
+
+        if (!empty($responders)) {
+            foreach ($responders as $responder) {
+                call_user_func_array($responder, array_merge([&$event], $event->params));
+            }
+        }
+    }
+
+    /**
+     * Returns all the registered responders for a given event
+     *
+     * @param string $name
+     *
+     * @return array|callable[]
+     */
+    protected function getEventResponders($name)
+    {
+        $responders = [];
+
+        if (array_key_exists($name, $this->responders)) {
+            $responders = $this->responders[$name];
+        }
+
+        if (array_key_exists($name, $this->once)) {
+            foreach ($this->once[$name] as $index => $responder) {
+                $responders[] = $responder;
+
+                unset($this->once[$name][$index]);
+            }
+        }
+
+        return $responders;
+    }
 }
